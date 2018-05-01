@@ -27,5 +27,6 @@ If you want to run the labs playbook (to set up an ubuntu 16.04 server instance)
 
 ## TODO
 
-Set up my "blackzone", routing all traffic to inetsim.
+- Set up my "blackzone", routing all traffic to inetsim.
+- Extract all of my specific configs (CIDRs etc) to ansible vars so they can easily be overriden.
 
