@@ -8,7 +8,7 @@ Here is a (very) short overview:
 
 This lab uses kvm as the hypervisor and installs virt-manager. There are two bridged interfaces created and configured for me to attach VMs to, br0 and br1.
 
-br0 is treated as the "greenzone". I'ts iptables config allows all outgoing connections to the internet but not to local lan networks.
+br0 is treated as the "greenzone". It's iptables config allows all outgoing connections to the internet but not to local lan networks.
 
 br1 is treated as the "redzone". It's iptables config allows all outgoing connections to the internet, but transparently routes them through tor, masking your IP address. It also doesn't allow outgoing connections to local lan networks.
 
