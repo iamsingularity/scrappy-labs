@@ -1,0 +1,4 @@
+*.retry
+*.swo
+*.swp
+playbook/inventory.yml
