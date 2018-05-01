@@ -1,6 +1,6 @@
 # Scrappy Labs
 
-This playbook will install and configure my typical malware anlysis lab setup. This was never really meant to be shared and it may not even work on your setup or network depending on your lan config etc etc. I run this on a fresh ubuntu 16.04 install, i doubt it will work on anything else without a fair amount of work.
+This playbook will install and configure my typical malware anlysis lab setup. This was never really meant to be shared and it may not even work on your setup or network depending on your lan config etc etc. I run this on a fresh ubuntu 16.04 install, i doubt it will work on anything else without a fair amount of work. Also this will install a bunch of stuff really only I will use (i3 with my specific config etc) so I wouldn't run this without modification if I were you anyway. You could just comment out all the dotfiles / i3 crap in the `playbook/workstation.yml` file.
 
 Here is a (very) short overview:
 
