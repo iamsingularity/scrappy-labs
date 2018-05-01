@@ -18,6 +18,4 @@ sudo ansible-playbook playbook/workstation.yml \
 	-c local \
 	--extra-vars "local_user=$ANALYST_USERNAME upstream_iface_name=$UPSTREAM_IFACE_NAME"
 
-if [ $? -ne 0 ]; then
-    exit 1
-fi
+exit $?
