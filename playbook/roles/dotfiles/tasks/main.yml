@@ -1,0 +1,41 @@
+---
+- name: clone dotfiles
+  git:
+    repo: ssh://git@github.com/scrapbird/dotfiles.git
+    dest: ~/Documents/dotfiles
+    key_file: "/home/{{ local_user }}/.ssh/id_rsa"
+  become: true
+  become_user: "{{ local_user }}"
+
+- name: link dotfiles
+  file:
+    src: "~/Documents/dotfiles/{{ item.src }}"
+    dest: "{{ item.dest }}"
+    state: link
+    force: yes
+  with_items:
+    - { src: "config/nvim", dest: "~/.config/nvim" }
+    - { src: "config/i3", dest: "~/.config/i3"}
+    - { src: ".tmux.conf", dest: "~/.tmux.conf" }
+    - { src: ".zshrc", dest: "~/.zshrc" }
+    - { src: ".Xresources", dest: "~/.Xresources" }
+    - { src: ".Xmodmap", dest: "~/.Xmodmap" }
+    - { src: ".radare2rc", dest: "~/.radare2rc"}
+  become: true
+  become_user: "{{ local_user }}"
+
+- block:
+    - name: Install vim plugins
+      command: nvim "+silent! PlugInstall!" +qall!
+      tags: plugins
+      become: true
+      become_user: "{{ local_user }}"
+  tags:
+    - bootstrap
+    - configure
+    - update
+
+- name: Build vim proc
+  command: nvim "+silent! VimProcInstall!" +qall!
+  become: true
+  become_user: "{{ local_user }}"

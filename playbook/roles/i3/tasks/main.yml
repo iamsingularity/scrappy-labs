@@ -1,0 +1,14 @@
+---
+
+- name: ensure dotfiles exist
+  import_role:
+    name: dotfiles
+
+- name: install i3
+  apt:
+    cache_valid_time: 600
+    name: "{{ item }}"
+  with_items:
+    - "i3"
+    - "i3blocks"
+    - "rofi"

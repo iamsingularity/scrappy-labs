@@ -1,0 +1,18 @@
+---
+- name: clone radare2
+  git:
+    repo: https://github.com/radare/radare2
+    dest: "/home/{{ local_user }}/Software/radare2"
+    force: true
+  become: true
+  become_user: "{{ local_user }}"
+  register: radare_repo
+
+- name: compile radare2
+  command: "./sys/user.sh"
+  args:
+    chdir: "/home/{{ local_user }}/Software/radare2"
+  become: true
+  become_user: "{{ local_user }}"
+  when: radare_repo.changed
+

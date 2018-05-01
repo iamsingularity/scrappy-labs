@@ -1,0 +1,66 @@
+#!/bin/bash
+
+UPSTREAM_IFACE_NAME="{{ upstream_iface_name }}"
+GREENZONE_IFACE_NAME="br0"
+GREENZONE_ADDR="192.168.3.1"
+GREENZONE_NETWORK="192.168.3.0/24"
+REDZONE_IFACE_NAME="br1"
+REDZONE_ADDR="192.168.4.1"
+REDZONE_NETWORK="192.168.4.0/24"
+
+TOR_TRANS_PORT=9040
+TOR_DNS_PORT=9053
+
+# Flush rules
+iptables -F
+iptables -t nat -F
+ip6tables -F
+ip6tables -t nat -F
+
+# Default accept
+iptables -P INPUT ACCEPT
+iptables -P OUTPUT ACCEPT
+iptables -P FORWARD ACCEPT
+
+# Allow traffic from host to greenzone machines
+iptables -A INPUT -s "$GREENZONE_ADDR" -d "$GREENZONE_NETWORK" -j ACCEPT
+iptables -A INPUT -i "$GREENZONE_IFACE_NAME" -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+# Drop traffic from greenzone to lan (including other VMs)
+iptables -A INPUT -i "$GREENZONE_IFACE_NAME" -d 10.0.0.0/16 -j DROP
+iptables -A FORWARD -i "$GREENZONE_IFACE_NAME" -d 10.0.0.0/16 -j DROP
+iptables -A INPUT -i "$GREENZONE_IFACE_NAME" -d 192.168.0.0/16 -j DROP
+iptables -A FORWARD -i "$GREENZONE_IFACE_NAME" -d 192.168.0.0/16 -j DROP
+
+# Allow all traffic from redzone to redzone services
+iptables -A INPUT -i "$REDZONE_IFACE_NAME" -d "$REDZONE_ADDR" -p tcp -m tcp --dport 9040 -j ACCEPT
+iptables -A INPUT -i "$REDZONE_IFACE_NAME" -d "$REDZONE_ADDR" -p tcp -m tcp --dport 9053 -j ACCEPT
+iptables -A INPUT -i "$REDZONE_IFACE_NAME" -d "$REDZONE_ADDR" -p udp -m udp --dport 53 -j ACCEPT
+
+# Drop traffic from redzone to lan (including other VMs)
+iptables -A INPUT -i "$REDZONE_IFACE_NAME" -d 10.0.0.0/16 -j DROP
+iptables -A FORWARD -i "$REDZONE_IFACE_NAME" -d 10.0.0.0/16 -j DROP
+iptables -A INPUT -i "$REDZONE_IFACE_NAME" -d 192.168.0.0/16 -j DROP
+iptables -A FORWARD -i "$REDZONE_IFACE_NAME" -d 192.168.0.0/16 -j DROP
+
+# Drop ipv6 traffic from the redzone
+ip6tables -A INPUT -i "$REDZONE_IFACE_NAME" -j DROP
+ip6tables -A FORWARD -i "$REDZONE_IFACE_NAME" -j DROP
+
+# Allow ssh connections from upstream
+iptables -I INPUT -i "$UPSTREAM_IFACE_NAME" -p tcp -m tcp --dport 22 -j ACCEPT
+
+# Allow all responses from lan
+iptables -A INPUT -i "$UPSTREAM_IFACE_NAME" -m state --state ESTABLISHED,RELATED -j ACCEPT
+# Drop all incomming traffic from lan that aren't expected
+iptables -A INPUT -i "$UPSTREAM_IFACE_NAME" -j DROP
+
+# Forward traffic from greenzone to the internet
+iptables -A FORWARD -i "$GREENZONE_IFACE_NAME" -o "$UPSTREAM_IFACE_NAME" -j ACCEPT
+iptables -A FORWARD -i "$UPSTREAM_IFACE_NAME" -o "$GREENZONE_IFACE_NAME" -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -t nat -A POSTROUTING -o "$UPSTREAM_IFACE_NAME" -j MASQUERADE
+
+# Forward traffic from redzone to tor
+iptables -t nat -A PREROUTING -i "$REDZONE_IFACE_NAME" -p udp -j REDIRECT --to-ports $TOR_DNS_PORT
+iptables -t nat -A PREROUTING -i "$REDZONE_IFACE_NAME" -p tcp --syn -j REDIRECT --to-ports $TOR_TRANS_PORT
+

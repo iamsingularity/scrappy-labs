@@ -1,0 +1,135 @@
+- hosts: labs
+
+  tasks:
+    # Main lab config
+    # --------------------------------------------------------------------------------
+    - name: install packages
+      become: yes
+      become_user: root
+      apt:
+        cache_valid_time: 600
+        name: "{{ item }}"
+      with_items:
+        - "build-essential"
+        - "tmux"
+        - "zsh"
+        - "htop"
+        - "vim"
+        - "git"
+        - "python-pip"
+        - "python3-pip"
+        - "silversearcher-ag"
+        - "tor"
+        - "openvpn"
+        - "qemu-kvm"
+        - "libvirt-bin"
+        - "ubuntu-vm-builder"
+
+    - name: configure tor
+      become: yes
+      become_user: root
+      copy:
+        src: "./files/torrc"
+        dest: "/etc/tor/torrc"
+        mode: 0644
+      notify: restart tor
+
+    - name: configure zsh
+      lineinfile:
+        path: ~/.zshrc
+        line: "export EDITOR=vim"
+        create: yes
+
+    - import_role:
+        name: docker
+      vars:
+        docker_users: ["{{ local_user }}"]
+      become: yes
+      become_user: root
+
+    # Network config
+    # --------------------------------------------------------------------------------
+    # TODO Define adapter names in inventory and pass through to templates
+
+    - name: install python-netaddr
+      apt: name=python-netaddr
+      become: yes
+      become_user: root
+
+    - name: enable ip forwarding
+      sysctl:
+        name: net.ipv4.ip_forward
+        value: 1
+        state: present
+      register: network
+      become: yes
+      become_user: root
+
+    - name: create network interfaces
+      copy:
+        src: "./files/interfaces.d/"
+        dest: "/etc/network/interfaces.d/"
+        mode: 0644
+      notify: restart networking
+      become: yes
+      become_user: root
+
+    - name: ensure /etc/network/interfaces.d is being used
+      lineinfile:
+        path: /etc/network/interfaces
+        line: "source /etc/network/interfaces.d/*"
+      notify: restart networking
+      become: yes
+      become_user: root
+
+    - name: create iptables setup script
+      template:
+        src: "./files/iptables-setup-labs.sh.js2"
+        dest: "/usr/local/bin/iptables-setup.sh"
+        mode: 0755
+      notify: restart networking
+      become: yes
+      become_user: root
+
+    - import_role:
+        name: dhcp
+      become: yes
+      become_user: root
+      vars:
+          dhcp_mode: "server"
+          dhcpd_interfaces: ["br0", "br1"]
+          dhcp_ipversion: "4"
+          dhcp_domain_name: "redzone"
+          dhcp_nameservers: ["8.8.8.8", "8.8.4.4"]
+          dhcpd_subnets: ["{{ dhcpd_subnet_br0 }}", "{{ dhcpd_subnet_br1 }}"]
+          dhcpd_authoritative: true
+
+          # greenzone
+          dhcpd_subnet_br0:
+            subnet: "192.168.3.0/24"
+            netmask: "255.255.255.0"
+            routers: "192.168.3.1"
+            pools:
+              - comment: "greenzone subnet pool"
+                range: "192.168.3.2 192.168.3.100"
+
+          # redzone
+          dhcpd_subnet_br1:
+            subnet: "192.168.4.0/24"
+            netmask: "255.255.255.0"
+            routers: "192.168.4.1"
+            pools:
+              - comment: "redzone subnet pool"
+                range: "192.168.4.2 192.168.4.100"
+
+  handlers:
+    - name: restart networking
+      service: name=networking state=restarted
+      become: yes
+      become_user: root
+
+    - name: restart tor
+      service: name=tor state=restarted
+      become: yes
+      become_user: root
+

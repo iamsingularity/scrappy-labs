@@ -1,0 +1,167 @@
+- hosts: localhost
+  connection: local
+
+  tasks:
+    # Main lab config
+    # --------------------------------------------------------------------------------
+    - name: install packages
+      apt:
+        cache_valid_time: 600
+        name: "{{ item }}"
+      with_items:
+        - "build-essential"
+        - "tmux"
+        - "zsh"
+        - "htop"
+        - "wireshark"
+        - "vim"
+        - "git"
+        - "python-pip"
+        - "python3-pip"
+        - "compton"
+        - "nitrogen"
+        - "scrot"
+        - "thunar"
+        - "fonts-font-awesome"
+        - "hexchat"
+        - "silversearcher-ag"
+        - "tor"
+        - "openvpn"
+        - "virt-manager"
+        - "qemu-kvm"
+        - "libvirt-bin"
+        - "ubuntu-vm-builder"
+
+    - name: configure tor
+      copy:
+        src: "./files/torrc"
+        dest: "/etc/tor/torrc"
+        mode: 0644
+      notify: restart tor
+
+    - name: create development directory
+      file:
+        path: "/home/{{ local_user }}/Development"
+        state: directory
+        owner: "{{ local_user }}"
+        group: "{{ local_user }}"
+
+    - name: create software directory
+      file:
+        path: "/home/{{ local_user }}/Software"
+        state: directory
+        owner: "{{ local_user }}"
+        group: "{{ local_user }}"
+
+    - name: create screenshots directory
+      file:
+        path: "/home/{{ local_user }}/Pictures/screenshots"
+        state: directory
+        owner: "{{ local_user }}"
+        group: "{{ local_user }}"
+
+    - name: create wallpaper directory
+      file:
+        path: "/home/{{ local_user }}/Pictures/Wallpapers"
+        state: directory
+        owner: "{{ local_user }}"
+        group: "{{ local_user }}"
+
+    - name: configure zsh
+      lineinfile:
+        path: ~/.zshrc
+        line: "export EDITOR=vim"
+        create: yes
+      become: true
+      become_user: "{{ local_user }}"
+
+    - name: set keyboard mods
+      lineinfile:
+        path: /etc/default/keyboard
+        line: XKBOPTIONS="ctrl:nocaps"
+
+    - import_role:
+        name: nvim
+
+    - import_role:
+        name: radare2
+
+    - import_role:
+        name: dotfiles
+
+    - import_role:
+        name: i3
+
+    - import_role:
+        name: docker
+      vars:
+        docker_users: ["{{ local_user }}"]
+
+    # Network config
+    # --------------------------------------------------------------------------------
+
+    - name: install python-netaddr
+      apt: name=python-netaddr
+
+    - name: enable ip forwarding
+      sysctl:
+        name: net.ipv4.ip_forward
+        value: 1
+        state: present
+      register: network
+
+    - name: create network interfaces
+      copy:
+        src: "./files/interfaces.d/"
+        dest: "/etc/network/interfaces.d/"
+        mode: 0644
+      notify: restart networking
+
+    - name: ensure /etc/network/interfaces.d is being used
+      lineinfile:
+        path: /etc/network/interfaces
+        line: "source /etc/network/interfaces.d/*"
+      notify: restart networking
+
+    - name: create iptables setup script
+      template:
+        src: "./files/iptables-setup-workstation.sh.js2"
+        dest: "/usr/local/bin/iptables-setup.sh"
+        mode: 0755
+      notify: restart networking
+
+    - import_role:
+        name: dhcp
+      vars:
+          dhcp_mode: "server"
+          dhcpd_interfaces: ["br0", "br1"]
+          dhcp_ipversion: "4"
+          dhcp_domain_name: "redzone"
+          dhcp_nameservers: ["8.8.8.8", "8.8.4.4"]
+          dhcpd_subnets: ["{{ dhcpd_subnet_br0 }}", "{{ dhcpd_subnet_br1 }}"]
+          dhcpd_authoritative: true
+
+          # greenzone
+          dhcpd_subnet_br0:
+            subnet: "192.168.3.0/24"
+            netmask: "255.255.255.0"
+            routers: "192.168.3.1"
+            pools:
+              - comment: "greenzone subnet pool"
+                range: "192.168.3.2 192.168.3.100"
+
+          # redzone
+          dhcpd_subnet_br1:
+            subnet: "192.168.4.0/24"
+            netmask: "255.255.255.0"
+            routers: "192.168.4.1"
+            pools:
+              - comment: "redzone subnet pool"
+                range: "192.168.4.2 192.168.4.100"
+
+  handlers:
+    - name: restart networking
+      service: name=networking state=restarted
+
+    - name: restart tor
+      service: name=tor state=restarted

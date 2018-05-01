@@ -1,0 +1,10 @@
+---
+all:
+  children:
+    labs:
+      hosts:
+        127.0.0.1:
+          ansible_ssh_user: user
+          upstream_iface_name: enp2s0
+          local_user: user
+
