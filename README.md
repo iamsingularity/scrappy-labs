@@ -2,6 +2,8 @@
 
 This playbook will install and configure my typical malware anlysis lab setup. This was never really meant to be shared and it may not even work on your setup or network depending on your lan config etc etc. I run this on a fresh ubuntu 16.04 install, i doubt it will work on anything else without a fair amount of work. Also this will install a bunch of stuff really only I will use (i3 with my specific config etc) so I wouldn't run this without modification if I were you anyway. You could just comment out all the dotfiles / i3 crap in the `playbook/workstation.yml` file.
 
+I should also mention this will remap your caps lock as a ctrl key.. I'm sorry if thats not your thing. Just find the block with `name: set keyboard mods` in the `playbook/workstation.yml` file and remove it.
+
 Here is a (very) short overview:
 
 This lab uses kvm as the hypervisor and installs virt-manager. There are two bridged interfaces created and configured for me to attach VMs to, br0 and br1.
