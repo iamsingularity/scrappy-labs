@@ -33,8 +33,8 @@ iptables -A INPUT -i "$GREENZONE_IFACE_NAME" -d 192.168.0.0/16 -j DROP
 iptables -A FORWARD -i "$GREENZONE_IFACE_NAME" -d 192.168.0.0/16 -j DROP
 
 # Allow all traffic from redzone to redzone services
-iptables -A INPUT -i "$REDZONE_IFACE_NAME" -d "$REDZONE_ADDR" -p tcp -m tcp --dport 9040 -j ACCEPT
-iptables -A INPUT -i "$REDZONE_IFACE_NAME" -d "$REDZONE_ADDR" -p tcp -m tcp --dport 9053 -j ACCEPT
+iptables -A INPUT -i "$REDZONE_IFACE_NAME" -d "$REDZONE_ADDR" -p tcp -m tcp --dport $TOR_TRANS_PORT -j ACCEPT
+iptables -A INPUT -i "$REDZONE_IFACE_NAME" -d "$REDZONE_ADDR" -p tcp -m tcp --dport $TOR_DNS_PORT -j ACCEPT
 iptables -A INPUT -i "$REDZONE_IFACE_NAME" -d "$REDZONE_ADDR" -p udp -m udp --dport 53 -j ACCEPT
 
 # Drop traffic from redzone to lan (including other VMs)
