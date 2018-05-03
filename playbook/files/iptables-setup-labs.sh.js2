@@ -52,7 +52,7 @@ iptables -I INPUT -i "$UPSTREAM_IFACE_NAME" -p tcp -m tcp --dport 22 -j ACCEPT
 
 # Allow all responses from lan
 iptables -A INPUT -i "$UPSTREAM_IFACE_NAME" -m state --state ESTABLISHED,RELATED -j ACCEPT
-# Drop all incomming traffic from lan that aren't expected
+# Drop all incomming packets from lan that aren't expected
 iptables -A INPUT -i "$UPSTREAM_IFACE_NAME" -j DROP
 
 # Forward traffic from greenzone to the internet

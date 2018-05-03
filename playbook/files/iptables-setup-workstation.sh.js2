@@ -49,7 +49,7 @@ ip6tables -A FORWARD -i "$REDZONE_IFACE_NAME" -j DROP
 
 # Allow all responses from lan
 iptables -A INPUT -i "$UPSTREAM_IFACE_NAME" -m state --state ESTABLISHED,RELATED -j ACCEPT
-# Drop all incomming traffic from lan that aren't expected
+# Drop all incomming packets from lan that aren't expected
 iptables -A INPUT -i "$UPSTREAM_IFACE_NAME" -j DROP
 
 # Forward traffic from greenzone to the internet
