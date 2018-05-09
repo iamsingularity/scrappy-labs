@@ -1,8 +1,33 @@
 - hosts: labs
 
+  vars_prompt:
+
+    - name: "secure_sshd"
+      prompt: "Secure sshd? Warning: This will add your ssh key to the server's authorized_keys!"
+      default: "no"
+      private: no
+
   tasks:
     # Main lab config
     # --------------------------------------------------------------------------------
+
+    - name: Add authorized key
+      authorized_key:
+        user: "{{ local_user }}"
+        state: present
+        key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+      when: secure_sshd == "yes"
+
+    - name: secure sshd
+      become: yes
+      become_user: root
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        line: "PasswordAuthentication no"
+        regexp: "^PasswordAuthentication"
+      notify: restart sshd
+      when: secure_sshd == "yes"
+
     - name: install packages
       become: yes
       become_user: root
@@ -130,6 +155,11 @@
 
     - name: restart tor
       service: name=tor state=restarted
+      become: yes
+      become_user: root
+
+    - name: restart sshd
+      service: name=sshd state=restarted
       become: yes
       become_user: root
 
