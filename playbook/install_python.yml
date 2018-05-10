@@ -1,0 +1,12 @@
+# This playbook handles the installation of a statsd daemon
+#
+# Author: Brenton Morris
+---
+- name: Install python
+  hosts: "{{ target }}"
+  become: true
+  gather_facts: no
+  pre_tasks:
+    - name: Install python2
+      raw: "{{ package_manager }} install -y python"
+
