@@ -34,11 +34,11 @@ docker_edition: "ce"
 docker_channel: "edge"
 
 # What version of Docker do you want to install?
-docker_version: "18.03.0"
+docker_version: "18.04.0"
 
 # Optionally install a specific version of Docker Compose.
 docker_install_docker_compose: True
-docker_compose_version: "1.20.1"
+docker_compose_version: "1.21.0"
 
 # A list of users to be added to the Docker group. For example if you have a
 # user of 'deploy', then you'll want to set docker_users: ['deploy'] here.
@@ -50,7 +50,7 @@ docker_users: []
 # on Sunday at midnight. This will help keep your Docker hosts' disks under
 # control. 
 docker_cron_tasks:
-  - command: docker system prune -f
+  - job: docker system prune -f
     name: "Docker clean up"
     # This uses the standard crontab syntax. 
     schedule: ["0", "0", "*", "*", "0"]
@@ -60,11 +60,22 @@ docker_cron_tasks:
 #   - "--dns 8.8.8.8"
 docker_daemon_options: []
 
+# Can be used to set environment variables for the Docker daemon, such as:
+# docker_daemon_environment:
+#   - "HTTP_PROXY=http://proxy.example.com:3128/"
+#   - "HTTPS_PROXY=http://proxy.example.com:3128/"
+#   - "NO_PROXY=localhost,127.0.0.1"
+docker_daemon_environment: []
+
 # The APT GPG key id used to sign the Docker package.
 docker_apt_key: "9DC858229FC7DD38854AE2D88D81803C0EBFCD88"
 
 # Address of the Docker repository.
 docker_repository: "deb [arch=amd64] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} {{ docker_channel }}"
+
+# Full APT package name.
+# Note: Docker versions 17.04 to 18.03 do not have that extra ~3 in the middle. 
+docker_apt_package_name: "{{ docker_version }}~{{ docker_edition }}~3-0~{{ ansible_distribution | lower }}"
 
 # How long should the apt-cache last in seconds?
 docker_apt_cache_time: 86400
