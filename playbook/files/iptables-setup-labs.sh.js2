@@ -7,6 +7,8 @@ GREENZONE_NETWORK="192.168.3.0/24"
 REDZONE_IFACE_NAME="br1"
 REDZONE_ADDR="192.168.4.1"
 REDZONE_NETWORK="192.168.4.0/24"
+DEVIT_ADDR="198.12.93.136"
+DEVIT_IFACE_NAME="br2"
 
 TOR_TRANS_PORT=9040
 TOR_DNS_PORT=9053
@@ -25,6 +27,10 @@ iptables -P FORWARD ACCEPT
 # Allow traffic from host to greenzone machines
 iptables -A INPUT -s "$GREENZONE_ADDR" -d "$GREENZONE_NETWORK" -j ACCEPT
 iptables -A INPUT -i "$GREENZONE_IFACE_NAME" -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+# Allow traffic to devit
+iptables -A INPUT -i "$DEVIT_IFACE_NAME" -s 0.0.0.0/0 -d "$DEVIT_ADDR" -j ACCEPT
+iptables -A INPUT -i "$DEVIT_IFACE_NAME" -s "$DEVIT_ADDR" -d 0.0.0.0/0 -j ACCEPT
 
 # Drop traffic from greenzone to lan (including other VMs)
 iptables -A INPUT -i "$GREENZONE_IFACE_NAME" -d 10.0.0.0/16 -j LOG --log-prefix "iptables dropping packet(1) " --log-level 7

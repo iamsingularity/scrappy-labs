@@ -1,0 +1,8 @@
+auto br2
+iface br2 inet static
+    address 198.12.93.136
+    netmask 255.255.255.0
+	pre-up brctl addbr br2 || true # create br2 if it doesn't exist
+	up /usr/local/bin/iptables-setup.sh
+
+

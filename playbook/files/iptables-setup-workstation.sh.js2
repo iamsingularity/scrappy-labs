@@ -26,6 +26,10 @@ iptables -P FORWARD ACCEPT
 iptables -A INPUT -s "$GREENZONE_ADDR" -d "$GREENZONE_NETWORK" -j ACCEPT
 iptables -A INPUT -i "$GREENZONE_IFACE_NAME" -m state --state ESTABLISHED,RELATED -j ACCEPT
 
+# Allow ftp traffic from greenzone and redzone to host
+iptables -A INPUT -i "$GREENZONE_IFACE_NAME" -s "$GREENZONE_NETWORK" -d "$GREENZONE_ADDR" -p tcp -m tcp --dport 21 -j ACCEPT
+iptables -A INPUT -i "$REDZONE_IFACE_NAME" -s "$REDZONE_NETWORK" -d "$REDZONE_ADDR" -p tcp -m tcp --dport 21 -j ACCEPT
+
 # Drop traffic from greenzone to lan (including other VMs)
 iptables -A INPUT -i "$GREENZONE_IFACE_NAME" -d 10.0.0.0/16 -j LOG --log-prefix "iptables dropping packet(1) " --log-level 7
 iptables -A INPUT -i "$GREENZONE_IFACE_NAME" -d 10.0.0.0/16 -j DROP
