@@ -100,66 +100,63 @@
     # Network config
     # --------------------------------------------------------------------------------
 
-    - name: install python-netaddr
-      apt: name=python-netaddr
-
-    - name: enable ip forwarding
-      sysctl:
-        name: net.ipv4.ip_forward
-        value: 1
-        state: present
-      register: network
-
-    - name: create network interfaces
-      copy:
-        src: "./files/interfaces.d/"
-        dest: "/etc/network/interfaces.d/"
-        mode: 0644
-      notify: restart networking
-
-    - name: ensure /etc/network/interfaces.d is being used
-      lineinfile:
-        path: /etc/network/interfaces
-        line: "source /etc/network/interfaces.d/*"
-      notify: restart networking
-
-    - name: create iptables setup script
-      template:
-        src: "./files/iptables-setup-workstation.sh.js2"
-        dest: "/usr/local/bin/iptables-setup.sh"
-        mode: 0755
-      notify: restart networking
-
-    - import_role:
-        name: dhcp
-      vars:
-          dhcp_mode: "server"
-          dhcpd_interfaces: ["br0", "br1"]
-          dhcp_ipversion: "4"
-          dhcp_domain_name: "redzone"
-          dhcp_nameservers: ["8.8.8.8", "8.8.4.4"]
-          dhcpd_subnets: ["{{ dhcpd_subnet_br0 }}", "{{ dhcpd_subnet_br1 }}"]
-          dhcpd_authoritative: true
-
-          # greenzone
-          dhcpd_subnet_br0:
-            subnet: "192.168.3.0/24"
-            netmask: "255.255.255.0"
-            routers: "192.168.3.1"
-            pools:
-              - comment: "greenzone subnet pool"
-                range: "192.168.3.2 192.168.3.100"
-
-          # redzone
-          dhcpd_subnet_br1:
-            subnet: "192.168.4.0/24"
-            netmask: "255.255.255.0"
-            routers: "192.168.4.1"
-            pools:
-              - comment: "redzone subnet pool"
-                range: "192.168.4.2 192.168.4.100"
+#    - name: install python-netaddr
+#      apt: name=python-netaddr
+#
+#    - name: enable ip forwarding
+#      sysctl:
+#        name: net.ipv4.ip_forward
+#        value: 1
+#        state: present
+#      register: network
+#
+#    - name: create network interfaces
+#      copy:
+#        src: "./files/netplan/"
+#        dest: "/etc/netplan/"
+#        mode: 0644
+#      notify: apply netplan
+#
+#    - name: create iptables setup script
+#      template:
+#        src: "./files/iptables-setup-workstation.sh.js2"
+#        dest: "/usr/local/bin/iptables-setup.sh"
+#        mode: 0755
+#      notify: restart networking
+#
+#    - import_role:
+#        name: dhcp
+#      vars:
+#          dhcp_mode: "server"
+#          dhcpd_interfaces: ["br0", "br1"]
+#          dhcp_ipversion: "4"
+#          dhcp_domain_name: "redzone"
+#          dhcp_nameservers: ["8.8.8.8", "8.8.4.4"]
+#          dhcpd_subnets: ["{{ dhcpd_subnet_br0 }}", "{{ dhcpd_subnet_br1 }}"]
+#          dhcpd_authoritative: true
+#
+#          # greenzone
+#          dhcpd_subnet_br0:
+#            subnet: "192.168.3.0/24"
+#            netmask: "255.255.255.0"
+#            routers: "192.168.3.1"
+#            pools:
+#              - comment: "greenzone subnet pool"
+#                range: "192.168.3.2 192.168.3.100"
+#
+#          # redzone
+#          dhcpd_subnet_br1:
+#            subnet: "192.168.4.0/24"
+#            netmask: "255.255.255.0"
+#            routers: "192.168.4.1"
+#            pools:
+#              - comment: "redzone subnet pool"
+#                range: "192.168.4.2 192.168.4.100"
 
   handlers:
+    - name: restart networking
+      command: netplan apply
+
     - name: restart networking
       service: name=networking state=restarted
 

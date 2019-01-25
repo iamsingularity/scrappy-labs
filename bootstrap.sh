@@ -2,7 +2,7 @@
 
 # Config
 ANALYST_USERNAME="scrappy"
-UPSTREAM_IFACE_NAME="enp4s0"
+UPSTREAM_IFACE_NAME="wlp4s0"
 
 if ! which ansible > /dev/null; then
 	echo "Installing ansible"

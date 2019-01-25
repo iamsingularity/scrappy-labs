@@ -1,23 +1,41 @@
 ---
 
 - hosts: "all"
+  become: true
 
   vars:
-    docker_daemon_options:
-      - "--dns 8.8.8.8"
+    docker__version: "18.06"
+
+    docker__users: ["test"]
+
+    docker__daemon_json: |
+      "dns": ["8.8.8.8"]
+
+    docker__daemon_environment:
+      - "HTTP_PROXY=http://proxy.a.com:80"
+      - "HTTPS_PROXY=https://proxy.a.com:443"
+
+    docker__daemon_flags:
+      - "-H fd://"
+      - "--debug"
+
+    docker__systemd_override: |
+      [Unit]
+      Invalid=Directive
+
+      [Service]
+      ThisIsJust=ATest
 
   roles:
-    - "role_under_test"
+    - role: "role_under_test"
 
   pre_tasks:
-    - name: Update APT cache
-      apt:
-        update_cache: True
-        cache_valid_time: 600
+    - name: Add test user
+      user:
+        name: "test"
+        shell: "/bin/bash"
 
-  post_tasks:
-    - name: Ensure /etc/systemd/system/docker.service contains '--dns 8.8.8.8'
-      # Double dashes: https://unix.stackexchange.com/a/11382
-      shell: grep -- "--dns 8.8.8.8" /etc/systemd/system/docker.service
-      register: result
-      changed_when: result.rc != 0
+    - name: Run the equivalent of "apt-get update"
+      apt:
+        update_cache: true
+      changed_when: false

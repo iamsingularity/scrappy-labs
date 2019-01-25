@@ -1,22 +1,25 @@
 ---
 
 galaxy_info:
+  role_name: "docker"
   author: "Nick Janetakis"
-  description: "Install and Docker and optionally Docker Compose."
-  company:
-  license: "license (MIT)"
-  min_ansible_version: 2.4
+  description: "Install and configure Docker / Docker Compose."
+  license: "MIT"
+  min_ansible_version: 2.5
 
   platforms:
     - name: "Ubuntu"
       versions:
         - "xenial"
+        - "bionic"
     - name: "Debian"
       versions:
-        - "jessie"
         - "stretch"
 
-  categories:
+  galaxy_tags:
+    - "containers"
+    - "compose"
+    - "docker"
     - "packaging"
     - "system"
 
