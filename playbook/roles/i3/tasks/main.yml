@@ -3,12 +3,87 @@
 - name: ensure dotfiles exist
   import_role:
     name: dotfiles
+  register: i3gaps_repo
 
-- name: install i3
+- name: install i3 gaps dependencies
   apt:
     cache_valid_time: 600
     name: "{{ item }}"
   with_items:
-    - "i3"
     - "i3blocks"
     - "rofi"
+    - "libxcb1-dev"
+    - "libxcb-keysyms1-dev"
+    - "libpango1.0-dev"
+    - "libxcb-util0-dev"
+    - "libxcb-icccm4-dev"
+    - "libyajl-dev"
+    - "libstartup-notification0-dev"
+    - "libxcb-randr0-dev"
+    - "libev-dev"
+    - "libxcb-cursor-dev"
+    - "libxcb-xinerama0-dev"
+    - "libxcb-xkb-dev"
+    - "libxkbcommon-dev"
+    - "libxkbcommon-x11-dev"
+    - "autoconf"
+    - "libxcb-xrm0"
+    - "libxcb-xrm-dev"
+    - "automake"
+    - "libxcb-shape0-dev"
+
+- name: clone i3 gaps
+  git:
+    repo: https://github.com/Airblader/i3
+    dest: "/home/{{ local_user }}/Software/i3-gaps"
+    force: true
+  become: true
+  become_user: "{{ local_user }}"
+  register: i3gaps_repo
+
+- name: run autoreconf
+  command: "autoreconf --force --install"
+  args:
+    chdir: "/home/{{ local_user }}/Software/i3-gaps"
+  become: true
+  become_user: "{{ local_user }}"
+  when: i3gaps_repo.changed
+
+- name: ensure build directory exists
+  file:
+    path: "/home/{{ local_user }}/Software/i3-gaps/build"
+    state: directory
+    owner: "{{ local_user }}"
+    group: "{{ local_user }}"
+  when: i3gaps_repo.changed
+
+- name: ensure build directory is empty
+  command: "rm -rf *"
+  args:
+    chdir: "/home/{{ local_user }}/Software/i3-gaps/build"
+  become: true
+  become_user: "{{ local_user }}"
+  when: i3gaps_repo.changed
+
+- name: configure i3 gaps
+  command: "../configure --prefix=/usr --sysconfdir=/etc --disable-sanitizers"
+  args:
+    chdir: "/home/{{ local_user }}/Software/i3-gaps/build"
+  become: true
+  become_user: "{{ local_user }}"
+  when: i3gaps_repo.changed
+
+- name: compile i3gaps
+  command: "make"
+  args:
+    chdir: "/home/{{ local_user }}/Software/i3-gaps/build"
+  become: true
+  become_user: "{{ local_user }}"
+  when: i3gaps_repo.changed
+
+- name: install i3gaps
+  command: "make install"
+  args:
+    chdir: "/home/{{ local_user }}/Software/i3-gaps/build"
+  when: i3gaps_repo.changed
+
