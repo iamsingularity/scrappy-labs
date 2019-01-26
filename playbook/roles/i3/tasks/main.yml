@@ -11,6 +11,7 @@
     name: "{{ item }}"
   with_items:
     - "i3blocks"
+    - "i3lock"
     - "rofi"
     - "libxcb1-dev"
     - "libxcb-keysyms1-dev"
@@ -87,3 +88,83 @@
     chdir: "/home/{{ local_user }}/Software/i3-gaps/build"
   when: i3gaps_repo.changed
 
+  # Polybar
+  # -------------------------------------------------------------------------------
+  
+- name: install polybar dependencies
+  apt:
+    cache_valid_time: 600
+    name: "{{ item }}"
+  with_items:
+    - "build-essential" 
+    - "git" 
+    - "cmake" 
+    - "cmake-data" 
+    - "pkg-config" 
+    - "libcairo2-dev" 
+    - "libxcb1-dev" 
+    - "libxcb-util0-dev" 
+    - "libxcb-randr0-dev" 
+    - "libxcb-composite0-dev" 
+    - "python-xcbgen" 
+    - "xcb-proto" 
+    - "libxcb-image0-dev" 
+    - "libxcb-ewmh-dev" 
+    - "libxcb-icccm4-dev"
+    - "libxcb-xkb-dev"
+    - "libxcb-xrm-dev"
+    - "libxcb-cursor-dev"
+    - "libasound2-dev"
+    - "libpulse-dev"
+    - "libjsoncpp-dev"
+    - "libmpdclient-dev"
+    - "libcurl4-openssl-dev"
+    - "libiw-dev"
+    - "libnl-genl-3-dev"
+
+- name: clone polybar 
+  git:
+    repo: https://github.com/jaagr/polybar
+    dest: "/home/{{ local_user }}/Software/polybar"
+    force: true
+  become: true
+  become_user: "{{ local_user }}"
+  register: polybar_repo
+
+- name: ensure build directory exists
+  file:
+    path: "/home/{{ local_user }}/Software/polybar/build"
+    state: directory
+    owner: "{{ local_user }}"
+    group: "{{ local_user }}"
+  when: polybar_repo.changed
+
+- name: ensure build directory is empty
+  command: "rm -rf *"
+  args:
+    chdir: "/home/{{ local_user }}/Software/polybar/build"
+  become: true
+  become_user: "{{ local_user }}"
+  when: polybar_repo.changed
+
+- name: run cmake
+  command: "cmake .."
+  args:
+    chdir: "/home/{{ local_user }}/Software/polybar/build"
+  become: true
+  become_user: "{{ local_user }}"
+  when: polybar_repo.changed
+
+- name: compile polybar
+  shell: "make -j`grep -c ^processor /proc/cpuinfo`"
+  args:
+    chdir: "/home/{{ local_user }}/Software/polybar/build"
+  become: true
+  become_user: "{{ local_user }}"
+  when: polybar_repo.changed
+
+- name: install polybar
+  command: "make install"
+  args:
+    chdir: "/home/{{ local_user }}/Software/polybar/build"
+  when: polybar_repo.changed
