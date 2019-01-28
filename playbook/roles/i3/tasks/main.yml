@@ -168,3 +168,37 @@
   args:
     chdir: "/home/{{ local_user }}/Software/polybar/build"
   when: polybar_repo.changed
+
+
+
+- name: clone light 
+  git:
+    repo: https://github.com/haikarainen/light
+    dest: "/home/{{ local_user }}/Software/light"
+    force: true
+  become: true
+  become_user: "{{ local_user }}"
+  register: light_repo
+
+- name: run autogen
+  command: "./autogen.sh"
+  args:
+    chdir: "/home/{{ local_user }}/Software/light"
+  become: true
+  become_user: "{{ local_user }}"
+  when: light_repo.changed
+
+- name: compile light
+  shell: "./configure && make"
+  args:
+    chdir: "/home/{{ local_user }}/Software/light"
+  become: true
+  become_user: "{{ local_user }}"
+  when: light_repo.changed
+
+- name: install light
+  command: "make install"
+  args:
+    chdir: "/home/{{ local_user }}/Software/light"
+  when: light_repo.changed
+
