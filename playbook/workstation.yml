@@ -33,6 +33,8 @@
         - "ubuntu-vm-builder"
         - "mumble"
         - "vlc"
+        - "xautolock"
+        - "caffeine"
 
     - name: configure tor
       copy:
