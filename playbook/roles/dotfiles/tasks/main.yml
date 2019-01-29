@@ -17,6 +17,7 @@
     - { src: "config/nvim", dest: "~/.config/nvim" }
     - { src: "config/i3", dest: "~/.config/i3"}
     - { src: "config/polybar", dest: "~/.config/polybar"}
+    - { src: "config/rofi", dest: "~/.config/rofi"}
     - { src: ".tmux.conf", dest: "~/.tmux.conf" }
     - { src: ".zshrc", dest: "~/.zshrc" }
     - { src: ".Xresources", dest: "~/.Xresources" }

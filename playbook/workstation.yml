@@ -31,6 +31,8 @@
         - "qemu-kvm"
         - "libvirt-bin"
         - "ubuntu-vm-builder"
+        - "mumble"
+        - "vlc"
 
     - name: configure tor
       copy:
