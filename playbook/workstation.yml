@@ -35,6 +35,8 @@
         - "vlc"
         - "xautolock"
         - "caffeine"
+        - "pm-utils"
+        - "xss-lock"
 
     - name: configure tor
       copy:
