@@ -7,6 +7,13 @@
   become: true
   become_user: "{{ local_user }}"
 
+- name: ensure ~/.local/bin exists
+  file:
+    path: "/home/{{ local_user }}/.local/bin"
+    state: directory
+    owner: "{{ local_user }}"
+    group: "{{ local_user }}"
+
 - name: link dotfiles
   file:
     src: "~/Documents/dotfiles/{{ item.src }}"
@@ -18,6 +25,7 @@
     - { src: "config/i3", dest: "~/.config/i3"}
     - { src: "config/polybar", dest: "~/.config/polybar"}
     - { src: "config/rofi", dest: "~/.config/rofi"}
+    - { src: "bin", dest: "~/.local/bin"}
     - { src: ".tmux.conf", dest: "~/.tmux.conf" }
     - { src: ".zshrc", dest: "~/.zshrc" }
     - { src: ".Xresources", dest: "~/.Xresources" }

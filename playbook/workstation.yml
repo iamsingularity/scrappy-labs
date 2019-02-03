@@ -37,6 +37,7 @@
         - "caffeine"
         - "pm-utils"
         - "xss-lock"
+        - "curl"
 
     - name: configure tor
       copy:
@@ -106,61 +107,94 @@
     # Network config
     # --------------------------------------------------------------------------------
 
-#    - name: install python-netaddr
-#      apt: name=python-netaddr
-#
-#    - name: enable ip forwarding
-#      sysctl:
-#        name: net.ipv4.ip_forward
-#        value: 1
-#        state: present
-#      register: network
-#
-#    - name: create network interfaces
-#      copy:
-#        src: "./files/netplan/"
-#        dest: "/etc/netplan/"
-#        mode: 0644
-#      notify: apply netplan
-#
-#    - name: create iptables setup script
-#      template:
-#        src: "./files/iptables-setup-workstation.sh.js2"
-#        dest: "/usr/local/bin/iptables-setup.sh"
-#        mode: 0755
-#      notify: restart networking
-#
-#    - import_role:
-#        name: dhcp
-#      vars:
-#          dhcp_mode: "server"
-#          dhcpd_interfaces: ["br0", "br1"]
-#          dhcp_ipversion: "4"
-#          dhcp_domain_name: "redzone"
-#          dhcp_nameservers: ["8.8.8.8", "8.8.4.4"]
-#          dhcpd_subnets: ["{{ dhcpd_subnet_br0 }}", "{{ dhcpd_subnet_br1 }}"]
-#          dhcpd_authoritative: true
-#
-#          # greenzone
-#          dhcpd_subnet_br0:
-#            subnet: "192.168.3.0/24"
-#            netmask: "255.255.255.0"
-#            routers: "192.168.3.1"
-#            pools:
-#              - comment: "greenzone subnet pool"
-#                range: "192.168.3.2 192.168.3.100"
-#
-#          # redzone
-#          dhcpd_subnet_br1:
-#            subnet: "192.168.4.0/24"
-#            netmask: "255.255.255.0"
-#            routers: "192.168.4.1"
-#            pools:
-#              - comment: "redzone subnet pool"
-#                range: "192.168.4.2 192.168.4.100"
+    - name: install python-netaddr
+      apt: name=python-netaddr
+
+    - name: enable ip forwarding
+      sysctl:
+        name: net.ipv4.ip_forward
+        value: 1
+        state: present
+      register: network
+
+    - name: create network interfaces
+      copy:
+        src: "./files/netplan/"
+        dest: "/etc/netplan/"
+        mode: 0644
+      notify: apply netplan
+
+    - name: create libvirt network directory
+      file:
+        path: "/opt/libvirt-networks"
+        state: directory
+        owner: "root"
+        group: "root"
+
+    - name: create greenzone libvirt network definition
+      copy:
+        src: "./files/libvirt-networks/br0.xml"
+        dest: "/opt/libvirt-networks/br0.xml"
+        mode: 0644
+      notify: enable greenzone libvirt
+
+    - name: create redzone libvirt network definition
+      copy:
+        src: "./files/libvirt-networks/br1.xml"
+        dest: "/opt/libvirt-networks/br1.xml"
+        mode: 0644
+      notify: enable redzone libvirt
+
+    - name: create iptables setup script
+      template:
+        src: "./files/iptables-setup-workstation.sh.js2"
+        dest: "/usr/local/bin/iptables-setup.sh"
+        mode: 0755
+      notify: restart networking
+
+    - import_role:
+        name: dhcp
+      vars:
+          dhcp_mode: "server"
+          dhcpd_interfaces: ["br0", "br1"]
+          dhcp_ipversion: "4"
+          dhcp_domain_name: "redzone"
+          dhcp_nameservers: ["8.8.8.8", "8.8.4.4"]
+          dhcpd_subnets: ["{{ dhcpd_subnet_br0 }}", "{{ dhcpd_subnet_br1 }}"]
+          dhcpd_authoritative: true
+
+          # greenzone
+          dhcpd_subnet_br0:
+            subnet: "192.168.3.0/24"
+            netmask: "255.255.255.0"
+            routers: "192.168.3.1"
+            pools:
+              - comment: "greenzone subnet pool"
+                range: "192.168.3.2 192.168.3.100"
+
+          # redzone
+          dhcpd_subnet_br1:
+            subnet: "192.168.4.0/24"
+            netmask: "255.255.255.0"
+            routers: "192.168.4.1"
+            pools:
+              - comment: "redzone subnet pool"
+                range: "192.168.4.2 192.168.4.100"
 
   handlers:
-    - name: restart networking
+    - name: enable greenzone libvirt
+      shell: | 
+        virsh net-define /opt/libvirt-networks/br0.xml \
+        && virsh net-start br0 \
+        && virsh net-autostart br0
+
+    - name: enable redzone libvirt
+      shell: | 
+        virsh net-define /opt/libvirt-networks/br1.xml \
+        && virsh net-start br1 \
+        && virsh net-autostart br1
+
+    - name: apply netplan
       command: netplan apply
 
     - name: restart networking
