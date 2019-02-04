@@ -137,6 +137,8 @@
     state: directory
     owner: "{{ local_user }}"
     group: "{{ local_user }}"
+  become: true
+  become_user: "{{ local_user }}"
   when: polybar_repo.changed
 
 - name: ensure build directory is empty
