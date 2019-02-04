@@ -70,8 +70,10 @@ iptables -t nat -A POSTROUTING -o "$UPSTREAM_IFACE_NAME" -j MASQUERADE
 
 # Exempt some traffic from tor forwarding
 iptables -t nat -I PREROUTING -i "$REDZONE_IFACE_NAME" -s "$REDZONE_NETWORK" -d "$REDZONE_ADDR" -p tcp -m tcp --dport 8989 -j ACCEPT
+# DHCP
+iptables -t nat -I PREROUTING -i "$REDZONE_IFACE_NAME" -p udp --dport 67:68 --sport 67:68 -j ACCEPT
 
-# Forward traffic from redzone to tor
-iptables -t nat -A PREROUTING -i "$REDZONE_IFACE_NAME" -p udp -j REDIRECT --to-ports "$TOR_DNS_PORT"
+# Forward dns and tcp traffic from redzone to tor
+iptables -t nat -A PREROUTING -i "$REDZONE_IFACE_NAME" -p udp --dport 53 -j REDIRECT --to-ports "$TOR_DNS_PORT"
 iptables -t nat -A PREROUTING -i "$REDZONE_IFACE_NAME" -p tcp --syn -j REDIRECT --to-ports "$TOR_TRANS_PORT"
 
