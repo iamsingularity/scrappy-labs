@@ -33,6 +33,10 @@ iptables -A INPUT -i "$GREENZONE_IFACE_NAME" -s "$GREENZONE_ADDR" -d "$GREENZONE
 # Allow certain services inside redzone
 iptables -A INPUT -i "$REDZONE_IFACE_NAME" -s "$REDZONE_NETWORK" -d "$REDZONE_ADDR" -p tcp -m tcp --dport 8989 -j ACCEPT
 iptables -A INPUT -i "$REDZONE_IFACE_NAME" -s "$REDZONE_ADDR" -d "$REDZONE_NETWORK" -m state --state ESTABLISHED,RELATED -j ACCEPT
+# tor
+iptables -A INPUT -i "$REDZONE_IFACE_NAME" -s "$REDZONE_NETWORK" -d "$REDZONE_ADDR" -p tcp -m tcp --dport "$TOR_TRANS_PORT" -j ACCEPT
+iptables -A INPUT -i "$REDZONE_IFACE_NAME" -s "$REDZONE_NETWORK" -d "$REDZONE_ADDR" -p udp -m udp --dport "$TOR_DNS_PORT" -j ACCEPT
+iptables -A INPUT -i "$REDZONE_IFACE_NAME" -s "$REDZONE_NETWORK" -d "$REDZONE_ADDR" -p udp -m udp --dport 53 -j ACCEPT
 
 # Drop traffic from greenzone to lan (including other VMs)
 iptables -A INPUT -i "$GREENZONE_IFACE_NAME" -d 10.0.0.0/16 -j LOG --log-prefix "iptables dropping packet(1) " --log-level 7
@@ -43,11 +47,6 @@ iptables -A INPUT -i "$GREENZONE_IFACE_NAME" -d 192.168.0.0/16 -j LOG --log-pref
 iptables -A INPUT -i "$GREENZONE_IFACE_NAME" -d 192.168.0.0/16 -j DROP
 iptables -A FORWARD -i "$GREENZONE_IFACE_NAME" -d 192.168.0.0/16 -j LOG --log-prefix "iptables dropping packet(4) " --log-level 7
 iptables -A FORWARD -i "$GREENZONE_IFACE_NAME" -d 192.168.0.0/16 -j DROP
-
-# Allow all traffic from redzone to redzone tor services
-iptables -A INPUT -i "$REDZONE_IFACE_NAME" -s "$REDZONE_NETWORK" -d "$REDZONE_ADDR" -p tcp -m tcp --dport "$TOR_TRANS_PORT" -j ACCEPT
-iptables -A INPUT -i "$REDZONE_IFACE_NAME" -s "$REDZONE_NETWORK" -d "$REDZONE_ADDR" -p udp -m udp --dport "$TOR_DNS_PORT" -j ACCEPT
-iptables -A INPUT -i "$REDZONE_IFACE_NAME" -s "$REDZONE_NETWORK" -d "$REDZONE_ADDR" -p udp -m udp --dport 53 -j ACCEPT
 
 # Drop all remaining redzone traffic
 iptables -A INPUT -s "$REDZONE_NETWORK" -j LOG --log-prefix "iptables dropping packet(5) " --log-level 7
