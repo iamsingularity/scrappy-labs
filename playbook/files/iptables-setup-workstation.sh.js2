@@ -26,9 +26,13 @@ iptables -P FORWARD ACCEPT
 iptables -A INPUT -s "$GREENZONE_ADDR" -d "$GREENZONE_NETWORK" -j ACCEPT
 iptables -A INPUT -i "$GREENZONE_IFACE_NAME" -m state --state ESTABLISHED,RELATED -j ACCEPT
 
-# Allow ftp traffic from greenzone and redzone to host
-iptables -A INPUT -i "$GREENZONE_IFACE_NAME" -s "$GREENZONE_NETWORK" -d "$GREENZONE_ADDR" -p tcp -m tcp --dport 21 -j ACCEPT
-iptables -A INPUT -i "$REDZONE_IFACE_NAME" -s "$REDZONE_NETWORK" -d "$REDZONE_ADDR" -p tcp -m tcp --dport 21 -j ACCEPT
+# Allow certain services inside greenzone 
+iptables -A INPUT -i "$GREENZONE_IFACE_NAME" -s "$GREENZONE_NETWORK" -d "$GREENZONE_ADDR" -p tcp -m tcp --dport 8989 -j ACCEPT
+iptables -A INPUT -i "$GREENZONE_IFACE_NAME" -s "$GREENZONE_ADDR" -d "$GREENZONE_NETWORK" -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+# Allow certain services inside redzone
+iptables -A INPUT -i "$REDZONE_IFACE_NAME" -s "$REDZONE_NETWORK" -d "$REDZONE_ADDR" -p tcp -m tcp --dport 8989 -j ACCEPT
+iptables -A INPUT -i "$REDZONE_IFACE_NAME" -s "$REDZONE_ADDR" -d "$REDZONE_NETWORK" -m state --state ESTABLISHED,RELATED -j ACCEPT
 
 # Drop traffic from greenzone to lan (including other VMs)
 iptables -A INPUT -i "$GREENZONE_IFACE_NAME" -d 10.0.0.0/16 -j LOG --log-prefix "iptables dropping packet(1) " --log-level 7
@@ -40,7 +44,7 @@ iptables -A INPUT -i "$GREENZONE_IFACE_NAME" -d 192.168.0.0/16 -j DROP
 iptables -A FORWARD -i "$GREENZONE_IFACE_NAME" -d 192.168.0.0/16 -j LOG --log-prefix "iptables dropping packet(4) " --log-level 7
 iptables -A FORWARD -i "$GREENZONE_IFACE_NAME" -d 192.168.0.0/16 -j DROP
 
-# Allow all traffic from redzone to redzone services
+# Allow all traffic from redzone to redzone tor services
 iptables -A INPUT -i "$REDZONE_IFACE_NAME" -s "$REDZONE_NETWORK" -d "$REDZONE_ADDR" -p tcp -m tcp --dport "$TOR_TRANS_PORT" -j ACCEPT
 iptables -A INPUT -i "$REDZONE_IFACE_NAME" -s "$REDZONE_NETWORK" -d "$REDZONE_ADDR" -p udp -m udp --dport "$TOR_DNS_PORT" -j ACCEPT
 iptables -A INPUT -i "$REDZONE_IFACE_NAME" -s "$REDZONE_NETWORK" -d "$REDZONE_ADDR" -p udp -m udp --dport 53 -j ACCEPT
@@ -64,6 +68,9 @@ iptables -A INPUT -i "$UPSTREAM_IFACE_NAME" -j DROP
 iptables -A FORWARD -i "$GREENZONE_IFACE_NAME" -o "$UPSTREAM_IFACE_NAME" -j ACCEPT
 iptables -A FORWARD -i "$UPSTREAM_IFACE_NAME" -o "$GREENZONE_IFACE_NAME" -m state --state ESTABLISHED,RELATED -j ACCEPT
 iptables -t nat -A POSTROUTING -o "$UPSTREAM_IFACE_NAME" -j MASQUERADE
+
+# Exempt some traffic from tor forwarding
+iptables -t nat -I PREROUTING -i "$REDZONE_IFACE_NAME" -s "$REDZONE_NETWORK" -d "$REDZONE_ADDR" -p tcp -m tcp --dport 8989 -j ACCEPT
 
 # Forward traffic from redzone to tor
 iptables -t nat -A PREROUTING -i "$REDZONE_IFACE_NAME" -p udp -j REDIRECT --to-ports "$TOR_DNS_PORT"
