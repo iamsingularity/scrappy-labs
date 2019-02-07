@@ -38,6 +38,7 @@
         - "pm-utils"
         - "xss-lock"
         - "curl"
+        - "fonts-symbola"
 
     - name: configure tor
       copy:
