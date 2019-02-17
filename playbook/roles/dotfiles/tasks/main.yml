@@ -31,6 +31,7 @@
     - { src: ".Xresources", dest: "~/.Xresources" }
     - { src: ".Xmodmap", dest: "~/.Xmodmap" }
     - { src: ".radare2rc", dest: "~/.radare2rc"}
+    - { src: "oh-my-zsh/themes/scrapbird.zsh-theme", dest: "~/.oh-my-zsh/themes/scrapbird.zsh-theme"}
   become: true
   become_user: "{{ local_user }}"
 
