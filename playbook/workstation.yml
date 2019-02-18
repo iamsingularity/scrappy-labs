@@ -39,6 +39,7 @@
         - "xss-lock"
         - "curl"
         - "fonts-symbola"
+        - "libreoffice"
 
     - name: configure tor
       copy:
