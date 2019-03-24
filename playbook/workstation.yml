@@ -40,7 +40,6 @@
         - "curl"
         - "fonts-symbola"
         - "libreoffice"
-        - "clang-tools"
 
     - name: configure tor
       copy:
@@ -101,6 +100,9 @@
 
     - import_role:
         name: i3
+
+    - import_role:
+        name: cquery
 
     - import_role:
         name: docker

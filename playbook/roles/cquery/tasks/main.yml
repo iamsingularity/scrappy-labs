@@ -1,0 +1,35 @@
+---
+
+- name: clone cquery
+  git:
+    repo: https://github.com/cquery-project/cquery
+    dest: "/home/{{ local_user }}/Software/cquery"
+    force: true
+  become: true
+  become_user: "{{ local_user }}"
+  register: cquery_repo
+
+- name: ensure build directory exists
+  file:
+    path: "/home/{{ local_user }}/Software/cquery/build"
+    state: directory
+    owner: "{{ local_user }}"
+    group: "{{ local_user }}"
+  when: cquery_repo.changed
+
+- name: configure cquery build
+  command: "cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=release"
+  args:
+    chdir: "/home/{{ local_user }}/Software/cquery/build"
+  become: true
+  become_user: "{{ local_user }}"
+  when: cquery_repo.changed
+
+- name: build query
+  command: "cmake --build ."
+  args:
+    chdir: "/home/{{ local_user }}/Software/cquery/build"
+  become: true
+  become_user: "{{ local_user }}"
+  when: cquery_repo.changed
+
