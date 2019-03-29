@@ -1,0 +1,19 @@
+---
+
+- name: clone pwndbg
+  git:
+    repo: https://github.com/pwndbg/pwndbg
+    dest: "/home/{{ local_user }}/Software/pwndbg"
+    force: true
+  become: true
+  become_user: "{{ local_user }}"
+  register: pwndbg_repo
+
+- name: install pwndbg
+  command: "./setup.sh"
+  args:
+    chdir: "/home/{{ local_user }}/Software/pwndbg"
+  become: true
+  become_user: "{{ local_user }}"
+  when: pwndbg_repo.changed
+

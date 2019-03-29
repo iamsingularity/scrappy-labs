@@ -105,6 +105,10 @@
         name: cquery
 
     - import_role:
+        name: pwndbg
+      tags: pwndbg
+
+    - import_role:
         name: docker
       vars:
         docker_users: ["{{ local_user }}"]
