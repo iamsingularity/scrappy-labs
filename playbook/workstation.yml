@@ -119,13 +119,17 @@
       file:
         path: "/home/{{ local_user }}/Development/go"
         state: directory
-        owner: "root"
-        group: "root"
+        owner: "{{local_user}}"
+        group: "{{local_user}}"
       tags: gopls
 
     - name: install gopls
-      command: go get -u golang.org/x/tools/cmd/gopls
+      shell: source ~/.zshrc && go get -u golang.org/x/tools/cmd/gopls
+      args:
+        executable: /bin/zsh
       tags: gopls
+      become: true
+      become_user: "{{local_user}}"
 
     # Network config
     # --------------------------------------------------------------------------------
