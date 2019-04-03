@@ -40,13 +40,11 @@
         - "curl"
         - "fonts-symbola"
         - "libreoffice"
-        - "golang-go"
         - "nodejs-dev"
         - "node-gyp"
         - "libssl1.0-dev" # needed by npm
         - "npm"
       tags:
-        - gopls
         - npm
 
     - name: configure tor
@@ -107,7 +105,7 @@
     - import_role:
         name: dotfiles
       tags: 
-        - gopls
+        - go
         - npm
 
     - import_role:
@@ -125,21 +123,9 @@
       vars:
         docker_users: ["{{ local_user }}"]
 
-    - name: create gopath
-      file:
-        path: "/home/{{ local_user }}/Development/go"
-        state: directory
-        owner: "{{local_user}}"
-        group: "{{local_user}}"
-      tags: gopls
-
-    - name: install gopls
-      shell: source ~/.zshrc && go get -u golang.org/x/tools/cmd/gopls
-      args:
-        executable: /bin/zsh
-      tags: gopls
-      become: true
-      become_user: "{{local_user}}"
+    - import_role:
+        name: go
+      tags: go
 
     - name: create ~/.npm-global
       file:

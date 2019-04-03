@@ -1,0 +1,33 @@
+---
+
+- name: create gopath
+  file:
+    path: "/home/{{ local_user }}/Development/go"
+    state: directory
+    owner: "{{local_user}}"
+    group: "{{local_user}}"
+
+- name: add go apt repository
+  apt_repository: 
+    repo: ppa:gophers/archive
+    update_cache: yes
+
+- name: install go
+  apt:
+    cache_valid_time: 600
+    name: "golang-1.11-go"
+
+- name: link go
+  file:
+    src: "/usr/lib/go-1.11"
+    dest: "/usr/lib/go"
+    state: link
+    force: yes
+
+- name: install gopls
+  shell: source ~/.zshrc && go get -u golang.org/x/tools/cmd/gopls
+  args:
+    executable: /bin/zsh
+  become: true
+  become_user: "{{local_user}}"
+
